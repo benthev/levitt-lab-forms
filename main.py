@@ -45,7 +45,10 @@ def main():
     print(wonder_weekly_stats)
 
     # Save to CSV
-    # filename = client.save_to_csv(responses_df)
+    seminar_weekly_stats.to_csv('output/seminar_weekly_stats.csv', index=False)
+    wonder_weekly_stats.to_csv('output/wonder_weekly_stats.csv', index=False)
+    seminar_guide_stats.to_csv('output/seminar_guide_stats.csv', index=False)
+    wonder_guide_stats.to_csv('output/wonder_guide_stats.csv', index=False)
     # print(f"   💾 Saved to: {filename}")
 
 

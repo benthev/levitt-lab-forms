@@ -31,12 +31,12 @@ def guide_level_summary(df):
 def week_level_summary(df):
     cols_quant_avail = [col for col in cols_quant if col in df.columns]
     stats_means = df.groupby(
-        'year-week', dropna=False)[cols_quant_avail].mean()
+        'week_start', dropna=False)[cols_quant_avail].mean()
     stats_means['mean_overall'] = stats_means[cols_quant_avail].mean(axis=1)
     stats_counts = df.groupby(
-        'year-week', dropna=False).size().reset_index(name='Count')
-    stats = pd.merge(stats_means, stats_counts, on='year-week',
+        'week_start', dropna=False).size().reset_index(name='Count')
+    stats = pd.merge(stats_means, stats_counts, on='week_start',
                      left_index=False, right_index=False)
-    stats = stats.sort_values(by='year-week', ascending=False)
+    stats = stats.sort_values(by='week_start', ascending=False)
 
     return stats

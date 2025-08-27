@@ -29,8 +29,9 @@ def attribute_topics(df):
 def clean_responses(df):
     # Convert Timestamp to datetime
     df['Timestamp'] = pd.to_datetime(df['Timestamp'], errors='coerce')
-    df['week'] = df['Timestamp'].dt.isocalendar().week
     df['year-week'] = df['Timestamp'].dt.strftime('%Y-%W')
+    df['week_start'] = pd.to_datetime(
+        df['year-week'] + '-1', format='%Y-%W-%w')
 
     # Scale certain columns from base-5 to base-10 for responses before Aug 13, 2025
     cols_to_scale = ['I felt comfortable as a student in this Seminar.',
