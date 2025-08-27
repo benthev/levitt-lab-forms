@@ -1,0 +1,4 @@
+pygsheets
+pandas
+python-dotenv
+numpy
