@@ -2,3 +2,4 @@ pygsheets
 pandas
 python-dotenv
 numpy
+openai

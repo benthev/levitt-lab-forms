@@ -1,4 +1,5 @@
 import pandas as pd
+from summarizer import SimpleTextSummarizer
 
 cols_quant = ['I felt comfortable as a student in this Seminar.',
               'I felt like my voice mattered in this Seminar.',
@@ -40,3 +41,13 @@ def week_level_summary(df):
     stats = stats.sort_values(by='week_start', ascending=False)
 
     return stats
+
+
+def summarize_qualitative_feedback(df):
+    cols_qual_avail = [col for col in cols_qual if col in df.columns]
+    summaries = {}
+    for col in cols_qual_avail:
+        feedback = df[col].dropna().tolist()
+        summarizer = SimpleTextSummarizer()
+        summaries[col] = summarizer.summarize_texts(feedback)
+    return summaries

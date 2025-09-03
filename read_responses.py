@@ -64,5 +64,6 @@ def clean_responses(df):
                   "What was the name of the Guide who delivered your Wonder Session?"]
     cols_guide = [col for col in cols_guide if col in df.columns]
     df['Guide'] = df[cols_guide[0]]
+    print(df.columns)
 
     return df

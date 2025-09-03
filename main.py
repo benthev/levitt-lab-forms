@@ -5,7 +5,7 @@ Simple script to fetch Google Forms responses.
 
 from forms_client import FormsClient
 from read_responses import get_responses, clean_responses
-from analyze_responses import guide_level_summary, week_level_summary
+from analyze_responses import guide_level_summary, week_level_summary, summarize_qualitative_feedback
 
 
 def main():
@@ -50,6 +50,9 @@ def main():
     seminar_guide_stats.to_csv('output/seminar_guide_stats.csv', index=False)
     wonder_guide_stats.to_csv('output/wonder_guide_stats.csv', index=False)
     # print(f"   💾 Saved to: {filename}")
+
+    # Summarize qual feedback
+    feedback_summary = summarize_qualitative_feedback(seminar_df[1:100])
 
 
 if __name__ == "__main__":
