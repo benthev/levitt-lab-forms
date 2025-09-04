@@ -6,6 +6,8 @@ Simple script to fetch Google Forms responses.
 from forms_client import FormsClient
 from read_responses import get_responses, clean_responses
 from analyze_responses import guide_level_summary, week_level_summary, summarize_qualitative_feedback
+from few_shot_examples import prepare_few_shot_examples
+from summarizer import SimpleTextSummarizer
 
 
 def main():
@@ -52,7 +54,13 @@ def main():
     # print(f"   💾 Saved to: {filename}")
 
     # Summarize qual feedback
-    feedback_summary = summarize_qualitative_feedback(seminar_df[1:100])
+    # Prepare few shot examples
+    examples_dict = prepare_few_shot_examples(
+        'input/few_shot_examples.csv', seminar_df)
+
+    summarizer = SimpleTextSummarizer()
+    summarizer.add_expert_examples(examples_dict)
+    # feedback_summary = summarizer.summarize(seminar_df[1:100])
 
 
 if __name__ == "__main__":

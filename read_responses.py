@@ -42,6 +42,11 @@ def clean_responses(df):
     df.loc[df['Timestamp'] < datetime(
         2025, 8, 13), cols_to_scale] = df.loc[df['Timestamp'] < datetime(2025, 8, 13), cols_to_scale]*2
 
+    guide_col = 'What was the name of the Guide who delivered your Seminar?'
+    if guide_col in df.columns:
+        df.loc[(df['Timestamp'] < datetime(2025, 8, 20)) & (
+            df[guide_col] == 'N/A'), guide_col] = "Megan Hanley"
+
     # Drop columns that are completely empty
     df = df.replace(r'^\s*$', pd.NA, regex=True)
     df = df.dropna(axis=1, how='all')
