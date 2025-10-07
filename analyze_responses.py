@@ -30,16 +30,18 @@ def guide_level_summary(df):
     return stats
 
 
-def week_level_summary(df):
+def topic_level_summary(df):
     cols_quant_avail = [col for col in cols_quant if col in df.columns]
     stats_means = df.groupby(
-        'week_start', dropna=False)[cols_quant_avail].mean()
+        'matched_topic', dropna=False)[cols_quant_avail].mean()
     stats_means['mean_overall'] = stats_means[cols_quant_avail].mean(axis=1)
-    stats_counts = df.groupby(
-        'week_start', dropna=False).size().reset_index(name='Count')
-    stats = pd.merge(stats_means, stats_counts, on='week_start',
+    stats_agg = df.groupby('matched_topic', dropna=False).agg(
+        count=('matched_topic', 'size'),
+        minimum_date=('Timestamp', 'min')
+    ).reset_index()
+    stats = pd.merge(stats_means, stats_agg, on='matched_topic',
                      left_index=False, right_index=False)
-    stats = stats.sort_values(by='week_start', ascending=False)
+    stats = stats.sort_values(by='minimum_date', ascending=True)
 
     return stats
 

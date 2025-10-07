@@ -36,6 +36,7 @@ class SimpleTextSummarizer:
         # Add expert examples
         if is_positive:
             texts_col = "positive_texts"
+            
         else:
             texts_col = "constructive_texts"
         for i, example in enumerate(self.expert_examples, start=1):

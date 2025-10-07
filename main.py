@@ -5,9 +5,10 @@ Simple script to fetch Google Forms responses.
 
 from forms_client import FormsClient
 from read_responses import get_responses, clean_responses
-from analyze_responses import guide_level_summary, week_level_summary, summarize_qualitative_feedback
+from analyze_responses import guide_level_summary, topic_level_summary, summarize_qualitative_feedback
 from few_shot_examples import prepare_few_shot_examples
 from summarizer import SimpleTextSummarizer
+from topic_categorizer import TopicCategorizer
 
 
 def main():
@@ -27,6 +28,25 @@ def main():
     seminar_df = clean_responses(seminar_df)
     wonder_df = clean_responses(wonder_df)
 
+    # Categorize response topics
+    print("\\n🎯 Categorizing topics...")
+    categorizer = TopicCategorizer()
+    seminar_topics = categorizer.get_reference_topics("Seminar")
+    wonder_topics = categorizer.get_reference_topics("Wonder Session")
+    print("   📚 Processing seminar topics...")
+    seminar_df = categorizer.categorize_dataframe_topics(
+        seminar_df, seminar_topics
+    )
+
+    print("   🔬 Processing wonder session topics...")
+    wonder_df = categorizer.categorize_dataframe_topics(
+        wonder_df, wonder_topics
+    )
+    seminar_summary = categorizer.get_categorization_summary(
+        seminar_df)
+    wonder_summary = categorizer.get_categorization_summary(
+        wonder_df)
+
     # Analyse responses
     print("\n📊 Analysing responses...")
 
@@ -38,28 +58,28 @@ def main():
     print("\n--- Wonder Session Guide Stats ---")
     print(wonder_guide_stats)
 
-    seminar_weekly_stats = week_level_summary(seminar_df)
-    wonder_weekly_stats = week_level_summary(wonder_df)
+    seminar_topic_stats = topic_level_summary(seminar_df)
+    wonder_topic_stats = topic_level_summary(wonder_df)
 
-    print("\n--- Seminar Weekly Stats ---")
-    print(seminar_weekly_stats)
-    print("\n--- Wonder Session Weekly Stats ---")
-    print(wonder_weekly_stats)
+    print("\n--- Seminar Topic Stats ---")
+    print(seminar_topic_stats)
+    print("\n--- Wonder Session Topic Stats ---")
+    print(wonder_topic_stats)
 
     # Save to CSV
-    seminar_weekly_stats.to_csv('output/seminar_weekly_stats.csv', index=False)
-    wonder_weekly_stats.to_csv('output/wonder_weekly_stats.csv', index=False)
+    seminar_topic_stats.to_csv('output/seminar_topic_stats.csv', index=False)
+    wonder_topic_stats.to_csv('output/wonder_topic_stats.csv', index=False)
     seminar_guide_stats.to_csv('output/seminar_guide_stats.csv', index=False)
     wonder_guide_stats.to_csv('output/wonder_guide_stats.csv', index=False)
     # print(f"   💾 Saved to: {filename}")
 
     # Summarize qual feedback
     # Prepare few shot examples
-    examples_dict = prepare_few_shot_examples(
-        'input/few_shot_examples.csv', seminar_df)
+    # examples_dict = prepare_few_shot_examples(
+    #     'input/few_shot_examples.csv', seminar_df)
 
-    summarizer = SimpleTextSummarizer()
-    summarizer.add_expert_examples(examples_dict)
+    # summarizer = SimpleTextSummarizer()
+    # summarizer.add_expert_examples(examples_dict)
     # feedback_summary = summarizer.summarize(seminar_df[1:100])
 
 

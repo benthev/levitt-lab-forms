@@ -22,7 +22,13 @@ def get_responses(title, worksheet="Form Responses 1"):
     return df
 
 
-def attribute_topics(df):
+def identify_topics(df):
+    topic_cols = ["What was your Seminar topic?",
+                  "What was your Wonder Session topic / title?"]
+    for topic_col in topic_cols:
+        if topic_col in df.columns:
+            df['topic'] = df[topic_col]
+            break
     return df
 
 
@@ -70,5 +76,7 @@ def clean_responses(df):
     cols_guide = [col for col in cols_guide if col in df.columns]
     df['Guide'] = df[cols_guide[0]]
     print(df.columns)
+
+    df = identify_topics(df)
 
     return df
