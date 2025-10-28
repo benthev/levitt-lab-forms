@@ -149,7 +149,7 @@ class TopicCategorizer:
             'mapping_details': mapping_counts.to_dict('records') if not mapping_counts.empty else []
         }
 
-    def get_reference_topics(self, column, filepath="input/TLL Mapping WS and Seminar- Year One - Main.csv"):
+    def get_reference_topics(self, column, filepath="https://docs.google.com/spreadsheets/d/1i5OZu7UVwcwQpYk7R8gSwvlW3FigO906etXPYG4t_Ec/export?format=csv&gid=0"):
         df = pd.read_csv(filepath)
         df["week_start"] = pd.to_datetime(
             df["Week Start"], format="%Y/%m/%d", errors='coerce')
