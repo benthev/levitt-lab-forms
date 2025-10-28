@@ -5,7 +5,7 @@ Simple script to fetch Google Forms responses.
 
 from forms_client import FormsClient
 from read_responses import get_responses, clean_responses
-from analyze_responses import guide_level_summary, topic_level_summary, summarize_qualitative_feedback
+from analyze_responses import guide_level_summary, topic_level_summary, summarize_qualitative_feedback, correlation_analysis
 from few_shot_examples import prepare_few_shot_examples
 from summarizer import SimpleTextSummarizer
 from topic_categorizer import TopicCategorizer
@@ -72,6 +72,18 @@ def main():
     seminar_guide_stats.to_csv('output/seminar_guide_stats.csv', index=False)
     wonder_guide_stats.to_csv('output/wonder_guide_stats.csv', index=False)
     # print(f"   💾 Saved to: {filename}")
+
+    # Correlation metrics
+    seminar_corr = correlation_analysis(seminar_df)
+    wonder_corr = correlation_analysis(wonder_df)
+
+    print("\n--- Seminar Correlation Matrix ---")
+    print(seminar_corr)
+    print("\n--- Wonder Session Correlation Matrix ---")
+    print(wonder_corr)
+
+    seminar_corr.to_csv('output/seminar_correlation_matrix.csv')
+    wonder_corr.to_csv('output/wonder_correlation_matrix.csv')
 
     # Summarize qual feedback
     # Prepare few shot examples

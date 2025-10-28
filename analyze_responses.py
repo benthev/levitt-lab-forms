@@ -54,3 +54,9 @@ def summarize_qualitative_feedback(df):
         summarizer = SimpleTextSummarizer()
         summaries[col] = summarizer.summarize_texts(feedback)
     return summaries
+
+
+def correlation_analysis(df):
+    cols_quant_avail = [col for col in cols_quant if col in df.columns]
+    corr_matrix = df[cols_quant_avail].corr()
+    return corr_matrix
