@@ -9,11 +9,45 @@ load_dotenv()
 
 
 class TopicCategorizer:
-    def __init__(self, api_key: str = os.getenv("OPENAI_API_KEY")):
+    def __init__(self, api_key: str = os.getenv("OPENAI_API_KEY"), cache_file: str = "topic_cache.json", use_cache: bool = True):
         if api_key is None:
             raise ValueError(
                 "API key must be provided either as argument or OPENAI_API_KEY environment variable")
         self.client = OpenAI(api_key=api_key)
+        self.cache_file = cache_file
+        self.use_cache = use_cache
+        self.topic_cache = self._load_cache() if use_cache else {}
+
+    def _load_cache(self) -> Dict[str, Tuple[Optional[str], Optional[str]]]:
+        """Load cached topic mappings from file"""
+        if os.path.exists(self.cache_file):
+            try:
+                with open(self.cache_file, 'r') as f:
+                    cache_data = json.load(f)
+                    # Convert list back to tuple for consistency
+                    return {k: tuple(v) if v else (None, None) for k, v in cache_data.items()}
+            except Exception as e:
+                print(f"Warning: Could not load cache file: {e}")
+                return {}
+        return {}
+
+    def _save_cache(self):
+        """Save topic mappings to cache file"""
+        if not self.use_cache:
+            return
+        try:
+            # Convert tuples to lists for JSON serialization
+            cache_data = {k: list(v) if v else None for k, v in self.topic_cache.items()}
+            with open(self.cache_file, 'w') as f:
+                json.dump(cache_data, f, indent=2)
+        except Exception as e:
+            print(f"Warning: Could not save cache file: {e}")
+
+    def _get_cache_key(self, topic: str, reference_topics: List[str]) -> str:
+        """Generate a cache key for a topic and reference topics combination"""
+        # Create a stable key based on topic and sorted reference topics
+        ref_topics_str = "|".join(sorted(reference_topics))
+        return f"{topic}:::{ref_topics_str}"
 
     def create_categorization_prompt(self, topic: str, reference_topics: List[str]) -> str:
         """Create a prompt to find the closest matching topic"""
@@ -41,6 +75,13 @@ class TopicCategorizer:
         if not topic or not reference_topics:
             return None, None
 
+        # Check cache first if enabled
+        if self.use_cache:
+            cache_key = self._get_cache_key(topic, reference_topics)
+            if cache_key in self.topic_cache:
+                print(f"    ✓ Cache hit for '{topic}'")
+                return self.topic_cache[cache_key]
+
         prompt = self.create_categorization_prompt(topic, reference_topics)
 
         try:
@@ -56,20 +97,37 @@ class TopicCategorizer:
             try:
                 match_index = int(result)
                 if match_index == 0:
-                    return None, "no_match"
+                    matched_result = (None, "no_match")
                 elif 1 <= match_index <= len(reference_topics):
                     # Simple confidence based on temperature and successful match
                     confidence = "high" if len(
                         reference_topics) <= 10 else "medium"
-                    return reference_topics[match_index - 1], confidence
+                    matched_result = (reference_topics[match_index - 1], confidence)
                 else:
-                    return None, "invalid_response"
+                    matched_result = (None, "invalid_response")
+                
+                # Cache the result if caching is enabled
+                if self.use_cache:
+                    cache_key = self._get_cache_key(topic, reference_topics)
+                    self.topic_cache[cache_key] = matched_result
+                    self._save_cache()
+                return matched_result
             except ValueError:
-                return None, "parse_error"
+                matched_result = (None, "parse_error")
+                if self.use_cache:
+                    cache_key = self._get_cache_key(topic, reference_topics)
+                    self.topic_cache[cache_key] = matched_result
+                    self._save_cache()
+                return matched_result
 
         except Exception as e:
             print(f"Error categorizing topic '{topic}': {str(e)}")
-            return None, "api_error"
+            matched_result = (None, "api_error")
+            if self.use_cache:
+                cache_key = self._get_cache_key(topic, reference_topics)
+                self.topic_cache[cache_key] = matched_result
+                self._save_cache()
+            return matched_result
 
     def categorize_dataframe_topics(self, df: pd.DataFrame, reference_topics: List[str],
                                     topic_column: str = 'topic') -> pd.DataFrame:
