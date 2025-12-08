@@ -2,10 +2,8 @@ import pandas as pd
 from summarizer import SimpleTextSummarizer
 
 cols_quant = ['I felt like my voice mattered in this Seminar.',
-              'I felt like I could connect with the Guide as a person.',
               'The content of the Seminar was interesting to me.',
-              'I learned a lot from the Seminar.',
-              'How much did it "wow" you?', 'How much fun did you have?',
+              'I learned a lot from the Seminar.', 'How much fun did you have?',
               'Did it leave you wanting to learn more about this topic?']
 
 cols_qual = ['What is your impression of this Guide? Feel free to use 2-4 words (or phrases) to describe them.',
@@ -34,14 +32,15 @@ def topic_level_summary(df):
     cols_quant_avail = [col for col in cols_quant if col in df.columns]
     stats_means = df.groupby(
         'matched_topic', dropna=False)[cols_quant_avail].mean()
-    stats_means['mean_overall'] = stats_means[cols_quant_avail].mean(axis=1)
+    stats_means['mean_overall'] = stats_means[cols_quant_avail].mean(
+        axis=1).round(3)
     stats_agg = df.groupby('matched_topic', dropna=False).agg(
         count=('matched_topic', 'size'),
         minimum_date=('Timestamp', 'min')
     ).reset_index()
     stats = pd.merge(stats_means, stats_agg, on='matched_topic',
                      left_index=False, right_index=False)
-    stats = stats.sort_values(by='minimum_date', ascending=True)
+    stats = stats.sort_values(by='mean_overall', ascending=False)
 
     return stats
 
