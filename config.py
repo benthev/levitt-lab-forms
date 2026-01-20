@@ -9,7 +9,8 @@ SERVICE_ACCOUNT_FILE = os.getenv("SERVICE_ACCOUNT_FILE")
 SCOPES = [
     'https://www.googleapis.com/auth/forms.body.readonly',
     'https://www.googleapis.com/auth/forms.responses.readonly',
-    'https://www.googleapis.com/auth/spreadsheets.readonly'
+    'https://www.googleapis.com/auth/spreadsheets.readonly',
+    'https://www.googleapis.com/auth/drive'
 ]
 
 # Form settings (set in .env file)

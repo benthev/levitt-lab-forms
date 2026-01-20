@@ -3,3 +3,4 @@ pandas
 python-dotenv
 numpy
 openai
+google-api-python-client

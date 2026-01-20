@@ -4,12 +4,14 @@ Simple script to fetch Google Forms responses.
 """
 
 import pandas as pd
+import os
 from forms_client import FormsClient
 from read_responses import get_responses, clean_responses
 from analyze_responses import guide_level_summary, topic_level_summary, summarize_qualitative_feedback, correlation_analysis
 from few_shot_examples import prepare_few_shot_examples
 from summarizer import SimpleTextSummarizer
 from topic_categorizer import TopicCategorizer
+from drive_uploader import upload_files_to_drive
 
 
 def main():
@@ -114,6 +116,14 @@ def main():
     # summarizer = SimpleTextSummarizer()
     # summarizer.add_expert_examples(examples_dict)
     # feedback_summary = summarizer.summarize(seminar_df[1:100])
+
+    # Upload files to Google Drive
+    drive_folder_id = os.getenv('DRIVE_FOLDER_ID')
+    if drive_folder_id:
+        upload_files_to_drive(folder_id=drive_folder_id)
+    else:
+        print("\n⚠️  DRIVE_FOLDER_ID not set in .env - skipping upload to Google Drive")
+        print("   To enable uploads, add DRIVE_FOLDER_ID=<your_folder_id> to .env")
 
 
 if __name__ == "__main__":
