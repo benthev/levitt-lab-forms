@@ -3,6 +3,7 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from google.oauth2 import service_account
 import config
+from googleapiclient.errors import HttpError
 
 
 def get_drive_service():
@@ -21,6 +22,27 @@ def get_drive_service():
         return drive_service
     except Exception as e:
         print(f"Error authenticating with Google Drive: {e}")
+        return None
+
+
+def find_existing_file(service, filename, parent_folder_id):
+    """Find an existing file with the given name in the parent folder and return its ID."""
+    query = f"name='{filename}' and '{parent_folder_id}' in parents and trashed=false"
+    try:
+        results = service.files().list(
+            q=query,
+            fields="files(id, name)",
+            supportsAllDrives=True,
+            includeItemsFromAllDrives=True
+        ).execute()
+        items = results.get('files', [])
+
+        if items:
+            return items[0]['id']  # Return the first match
+        return None
+    except HttpError as error:
+        print(
+            f"Warning: Could not search for existing file '{filename}': {error}")
         return None
 
 
@@ -77,16 +99,32 @@ def upload_files_to_drive(folder_id=None, local_folder='output'):
             media = MediaFileUpload(
                 file_path, mimetype=mime_type, resumable=True)
 
-            # Upload file
-            file = drive_service.files().create(
-                body=file_metadata,
-                media_body=media,
-                fields='id, name, webViewLink',
-                supportsAllDrives=True  # THIS IS A KEY LINE
-            ).execute()
+            # Check if file already exists in Drive
+            existing_file_id = find_existing_file(
+                drive_service, filename, folder_id)
 
-            uploaded_files.append(filename)
-            print(f"   ✅ Uploaded: {filename} (ID: {file.get('id')})")
+            if existing_file_id:
+                # Update existing file
+                file = drive_service.files().update(
+                    fileId=existing_file_id,
+                    media_body=media,
+                    fields='id, name, webViewLink',
+                    supportsAllDrives=True
+                ).execute()
+                print(
+                    f"   🔄 Updated: {filename} (ID: {file.get('id')})")
+                uploaded_files.append(filename)
+            else:
+                # Upload new file
+                file = drive_service.files().create(
+                    body=file_metadata,
+                    media_body=media,
+                    fields='id, name, webViewLink',
+                    supportsAllDrives=True  # THIS IS A KEY LINE
+                ).execute()
+
+                uploaded_files.append(filename)
+                print(f"   ✅ Uploaded: {filename} (ID: {file.get('id')})")
 
         except Exception as e:
             print(f"   ❌ Failed to upload {filename}: {e}")
