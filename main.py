@@ -93,19 +93,24 @@ def main():
     seminar_comparison = seminar_df[['topic', 'matched_topic']].copy()
     seminar_comparison.columns = ['Original Topic', 'Matched Topic']
     seminar_comparison = seminar_comparison.sort_values('Original Topic')
-    seminar_comparison.to_csv('output/seminar_topic_comparison.csv', index=False)
-    
+    seminar_comparison.to_csv(
+        'output/topic comparisons/seminar_topic_comparison.csv', index=False)
+
     wonder_comparison = wonder_df[['topic', 'matched_topic']].copy()
     wonder_comparison.columns = ['Original Topic', 'Matched Topic']
     wonder_comparison = wonder_comparison.sort_values('Original Topic')
-    wonder_comparison.to_csv('output/wonder_topic_comparison.csv', index=False)
-    
+    wonder_comparison.to_csv(
+        'output/topic comparisons/wonder_topic_comparison.csv', index=False)
+
     # Combined comparison
     seminar_comparison['Session Type'] = 'Seminar'
     wonder_comparison['Session Type'] = 'Wonder Session'
-    combined_comparison = pd.concat([seminar_comparison, wonder_comparison], ignore_index=True)
-    combined_comparison = combined_comparison.sort_values(['Session Type', 'Original Topic'])
-    combined_comparison.to_csv('output/combined_topic_comparison.csv', index=False)
+    combined_comparison = pd.concat(
+        [seminar_comparison, wonder_comparison], ignore_index=True)
+    combined_comparison = combined_comparison.sort_values(
+        ['Session Type', 'Original Topic'])
+    combined_comparison.to_csv(
+        'output/topic comparisons/combined_topic_comparison.csv', index=False)
     print(f"   💾 Saved topic comparison CSVs")
 
     # Summarize qual feedback
