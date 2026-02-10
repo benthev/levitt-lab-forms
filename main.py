@@ -69,11 +69,11 @@ def main():
     print("\n--- Wonder Session Topic Stats ---")
     print(wonder_topic_stats)
 
-    # Save to CSV
-    seminar_topic_stats.to_csv('output/seminar_topic_stats.csv', index=False)
-    wonder_topic_stats.to_csv('output/wonder_topic_stats.csv', index=False)
-    seminar_guide_stats.to_csv('output/seminar_guide_stats.csv', index=False)
-    wonder_guide_stats.to_csv('output/wonder_guide_stats.csv', index=False)
+    # Save to Excel
+    seminar_topic_stats.to_excel('output/seminar_topic_stats.xlsx', index=False)
+    wonder_topic_stats.to_excel('output/wonder_topic_stats.xlsx', index=False)
+    seminar_guide_stats.to_excel('output/seminar_guide_stats.xlsx', index=False)
+    wonder_guide_stats.to_excel('output/wonder_guide_stats.xlsx', index=False)
     # print(f"   💾 Saved to: {filename}")
 
     # Correlation metrics
@@ -85,22 +85,22 @@ def main():
     print("\n--- Wonder Session Correlation Matrix ---")
     print(wonder_corr)
 
-    seminar_corr.to_csv('output/seminar_correlation_matrix.csv')
-    wonder_corr.to_csv('output/wonder_correlation_matrix.csv')
+    seminar_corr.to_excel('output/seminar_correlation_matrix.xlsx')
+    wonder_corr.to_excel('output/wonder_correlation_matrix.xlsx')
 
     # Generate topic comparison CSVs
     print("\n📋 Generating topic comparison CSVs...")
     seminar_comparison = seminar_df[['topic', 'matched_topic']].copy()
     seminar_comparison.columns = ['Original Topic', 'Matched Topic']
     seminar_comparison = seminar_comparison.sort_values('Original Topic')
-    seminar_comparison.to_csv(
-        'output/topic comparisons/seminar_topic_comparison.csv', index=False)
+    seminar_comparison.to_excel(
+        'output/topic comparisons/seminar_topic_comparison.xlsx', index=False)
 
     wonder_comparison = wonder_df[['topic', 'matched_topic']].copy()
     wonder_comparison.columns = ['Original Topic', 'Matched Topic']
     wonder_comparison = wonder_comparison.sort_values('Original Topic')
-    wonder_comparison.to_csv(
-        'output/topic comparisons/wonder_topic_comparison.csv', index=False)
+    wonder_comparison.to_excel(
+        'output/topic comparisons/wonder_topic_comparison.xlsx', index=False)
 
     # Combined comparison
     seminar_comparison['Session Type'] = 'Seminar'
@@ -109,9 +109,9 @@ def main():
         [seminar_comparison, wonder_comparison], ignore_index=True)
     combined_comparison = combined_comparison.sort_values(
         ['Session Type', 'Original Topic'])
-    combined_comparison.to_csv(
-        'output/topic comparisons/combined_topic_comparison.csv', index=False)
-    print(f"   💾 Saved topic comparison CSVs")
+    combined_comparison.to_excel(
+        'output/topic comparisons/combined_topic_comparison.xlsx', index=False)
+    print(f"   💾 Saved topic comparison files")
 
     # Summarize qual feedback
     # Prepare few shot examples

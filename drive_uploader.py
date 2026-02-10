@@ -68,10 +68,11 @@ def upload_files_to_drive(folder_id=None, local_folder='output'):
 
     uploaded_files = []
 
-    # Get all files in the output folder
+    # Get only xlsx files in the output folder (skip csv files)
     files_to_upload = [f for f in os.listdir(local_folder)
                        if os.path.isfile(os.path.join(local_folder, f))
-                       and not f.startswith('.')]
+                       and not f.startswith('.')
+                       and f.endswith('.xlsx')]
 
     if not files_to_upload:
         print(f"No files found in '{local_folder}' to upload.")
@@ -92,9 +93,8 @@ def upload_files_to_drive(folder_id=None, local_folder='output'):
             if folder_id:
                 file_metadata['parents'] = [folder_id]
 
-            # Determine MIME type based on file extension
-            mime_type = 'text/csv' if filename.endswith(
-                '.csv') else 'application/octet-stream'
+            # MIME type for Excel files
+            mime_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
             media = MediaFileUpload(
                 file_path, mimetype=mime_type, resumable=True)
