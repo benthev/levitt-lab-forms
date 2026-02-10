@@ -20,9 +20,11 @@ def guide_level_summary(df):
     stats_means['mean_overall'] = stats_means[cols_quant_avail].mean(
         axis=1).round(3)
     stats_counts = df.groupby(
-        'Guide', dropna=False).size().reset_index(name='Count')
+        'Guide', dropna=False).size().reset_index(name='count')
     stats = pd.merge(stats_means, stats_counts, on='Guide',
                      left_index=False, right_index=False)
+    # Filter to topics with at least 5 responses
+    stats = stats[stats['count'] >= 5]
     stats = stats.sort_values(by='mean_overall', ascending=False)
 
     return stats
@@ -40,6 +42,27 @@ def topic_level_summary(df):
     ).reset_index()
     stats = pd.merge(stats_means, stats_agg, on='matched_topic',
                      left_index=False, right_index=False)
+    # Filter to topics with at least 5 responses
+    stats = stats[stats['count'] >= 5]
+    stats = stats.sort_values(by='mean_overall', ascending=False)
+
+    return stats
+
+
+def topic_guide_level_summary(df):
+    cols_quant_avail = [col for col in cols_quant if col in df.columns]
+    stats_means = df.groupby(
+        ['matched_topic', 'Guide'], dropna=False)[cols_quant_avail].mean()
+    stats_means['mean_overall'] = stats_means[cols_quant_avail].mean(
+        axis=1).round(3)
+    stats_agg = df.groupby(['matched_topic', 'Guide'], dropna=False).agg(
+        count=('matched_topic', 'size'),
+        minimum_date=('Timestamp', 'min')
+    ).reset_index()
+    stats = pd.merge(stats_means, stats_agg, on=['matched_topic', 'Guide'],
+                     left_index=False, right_index=False)
+    # Filter to topics with at least 5 responses
+    stats = stats[stats['count'] >= 5]
     stats = stats.sort_values(by='mean_overall', ascending=False)
 
     return stats
