@@ -5,6 +5,7 @@ Simple script to fetch Google Forms responses.
 
 import pandas as pd
 import os
+from openpyxl.utils import get_column_letter
 from forms_client import FormsClient
 from read_responses import get_responses, clean_responses
 from analyze_responses import guide_level_summary, topic_level_summary, summarize_qualitative_feedback, correlation_analysis
@@ -12,6 +13,29 @@ from few_shot_examples import prepare_few_shot_examples
 from summarizer import SimpleTextSummarizer
 from topic_categorizer import TopicCategorizer
 from drive_uploader import upload_files_to_drive
+
+
+def save_excel_with_autofit(df, filepath, index=False):
+    """Save DataFrame to Excel with auto-fitted column widths."""
+    with pd.ExcelWriter(filepath, engine='openpyxl') as writer:
+        df.to_excel(writer, index=index, sheet_name='Sheet1')
+        worksheet = writer.sheets['Sheet1']
+        
+        # Column offset (1 if index is written, 0 otherwise)
+        col_offset = 1 if index else 0
+        
+        # Handle index column if present
+        if index:
+            max_idx_len = max(df.index.astype(str).map(len).max(), len(str(df.index.name) or '')) + 2
+            worksheet.column_dimensions['A'].width = max_idx_len
+        
+        for idx, col in enumerate(df.columns):
+            # Get max length of column content
+            max_length = max(
+                df[col].astype(str).map(len).max(),
+                len(str(col))
+            ) + 2  # Add padding
+            worksheet.column_dimensions[get_column_letter(idx + 1 + col_offset)].width = max_length
 
 
 def main():
@@ -70,10 +94,10 @@ def main():
     print(wonder_topic_stats)
 
     # Save to Excel
-    seminar_topic_stats.to_excel('output/seminar_topic_stats.xlsx', index=False)
-    wonder_topic_stats.to_excel('output/wonder_topic_stats.xlsx', index=False)
-    seminar_guide_stats.to_excel('output/seminar_guide_stats.xlsx', index=False)
-    wonder_guide_stats.to_excel('output/wonder_guide_stats.xlsx', index=False)
+    save_excel_with_autofit(seminar_topic_stats, 'output/seminar_topic_stats.xlsx')
+    save_excel_with_autofit(wonder_topic_stats, 'output/wonder_topic_stats.xlsx')
+    save_excel_with_autofit(seminar_guide_stats, 'output/seminar_guide_stats.xlsx')
+    save_excel_with_autofit(wonder_guide_stats, 'output/wonder_guide_stats.xlsx')
     # print(f"   💾 Saved to: {filename}")
 
     # Correlation metrics
@@ -85,22 +109,20 @@ def main():
     print("\n--- Wonder Session Correlation Matrix ---")
     print(wonder_corr)
 
-    seminar_corr.to_excel('output/seminar_correlation_matrix.xlsx')
-    wonder_corr.to_excel('output/wonder_correlation_matrix.xlsx')
+    save_excel_with_autofit(seminar_corr, 'output/seminar_correlation_matrix.xlsx', index=True)
+    save_excel_with_autofit(wonder_corr, 'output/wonder_correlation_matrix.xlsx', index=True)
 
     # Generate topic comparison CSVs
     print("\n📋 Generating topic comparison CSVs...")
     seminar_comparison = seminar_df[['topic', 'matched_topic']].copy()
     seminar_comparison.columns = ['Original Topic', 'Matched Topic']
     seminar_comparison = seminar_comparison.sort_values('Original Topic')
-    seminar_comparison.to_excel(
-        'output/topic comparisons/seminar_topic_comparison.xlsx', index=False)
+    save_excel_with_autofit(seminar_comparison, 'output/topic comparisons/seminar_topic_comparison.xlsx')
 
     wonder_comparison = wonder_df[['topic', 'matched_topic']].copy()
     wonder_comparison.columns = ['Original Topic', 'Matched Topic']
     wonder_comparison = wonder_comparison.sort_values('Original Topic')
-    wonder_comparison.to_excel(
-        'output/topic comparisons/wonder_topic_comparison.xlsx', index=False)
+    save_excel_with_autofit(wonder_comparison, 'output/topic comparisons/wonder_topic_comparison.xlsx')
 
     # Combined comparison
     seminar_comparison['Session Type'] = 'Seminar'
@@ -109,8 +131,7 @@ def main():
         [seminar_comparison, wonder_comparison], ignore_index=True)
     combined_comparison = combined_comparison.sort_values(
         ['Session Type', 'Original Topic'])
-    combined_comparison.to_excel(
-        'output/topic comparisons/combined_topic_comparison.xlsx', index=False)
+    save_excel_with_autofit(combined_comparison, 'output/topic comparisons/combined_topic_comparison.xlsx')
     print(f"   💾 Saved topic comparison files")
 
     # Summarize qual feedback
