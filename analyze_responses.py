@@ -27,21 +27,21 @@ def quant_summary(df, agg_cols):
 
 
 def guide_level_summary(df):
-    stats = quant_summary(df, 'Guide')
-    return stats
+    summary = all_feedback_combined(df, 'Guide')
+    return summary
 
 
 def topic_level_summary(df):
-    stats = quant_summary(df, 'matched_topic')
-    return stats
+    summary = all_feedback_combined(df, 'matched_topic')
+    return summary
 
 
 def topic_guide_level_summary(df):
-    stats = quant_summary(df, ['matched_topic', 'Guide'])
-    return stats
+    summary = all_feedback_combined(df, ['matched_topic', 'Guide'])
+    return summary
 
 
-def summarize_qualitative_feedback(df, agg_cols):
+def qual_summary(df, agg_cols):
     cols_qual_avail = [col for col in cols_qual if col in df.columns]
 
     if len(cols_qual_avail) > 1:
@@ -60,6 +60,13 @@ def summarize_qualitative_feedback(df, agg_cols):
     #     summarizer = SimpleTextSummarizer()
     #     summaries[col] = summarizer.summarize_texts(feedback)
     return agg_df
+
+
+def all_feedback_combined(df, agg_cols):
+    stats = quant_summary(df, agg_cols)
+    qual = qual_summary(df, agg_cols)
+    merged_df = pd.merge(stats, qual, on=agg_cols, how='left')
+    return merged_df
 
 
 def correlation_analysis(df):
