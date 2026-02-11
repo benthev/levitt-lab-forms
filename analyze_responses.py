@@ -46,13 +46,13 @@ def qual_summary(df, agg_cols):
 
     if len(cols_qual_avail) > 1:
         df['qual_feedback'] = df[cols_qual_avail].fillna(
-            '').agg(';'.join, axis=1)
+            '').agg('; '.join, axis=1)
     else:
         df['qual_feedback'] = df[cols_qual_avail[0]].fillna(
             '') if cols_qual_avail else ''
 
     agg_df = df.groupby(agg_cols, dropna=False)['qual_feedback'].apply(
-        lambda x: '; '.join(x)).reset_index()
+        lambda x: '; '.join(x[x.notna() & (x != '')])).reset_index()
 
     # summaries = {}
     # for col in cols_qual_avail:
