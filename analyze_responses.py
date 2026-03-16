@@ -44,21 +44,11 @@ def topic_guide_level_summary(df):
 def qual_summary(df, agg_cols):
     cols_qual_avail = [col for col in cols_qual if col in df.columns]
 
-    if len(cols_qual_avail) > 1:
-        df['qual_feedback'] = df[cols_qual_avail].fillna(
-            '').agg('; '.join, axis=1)
-    else:
-        df['qual_feedback'] = df[cols_qual_avail[0]].fillna(
-            '') if cols_qual_avail else ''
+    summarizer = SimpleTextSummarizer()
+    agg_df = df.groupby(agg_cols, dropna=False).apply(
+        lambda group: summarizer.summarize_texts(text_list) if (text_list := group[cols_qual_avail].stack().dropna().tolist()) else ''
+    ).reset_index(name='qual_summary')
 
-    agg_df = df.groupby(agg_cols, dropna=False)['qual_feedback'].apply(
-        lambda x: '; '.join(x[x.notna() & (x != '')])).reset_index()
-
-    # summaries = {}
-    # for col in cols_qual_avail:
-    #     feedback = df[col].dropna().tolist()
-    #     summarizer = SimpleTextSummarizer()
-    #     summaries[col] = summarizer.summarize_texts(feedback)
     return agg_df
 
 

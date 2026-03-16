@@ -26,23 +26,16 @@ class SimpleTextSummarizer:
         """
         self.expert_examples = examples
 
-    def create_prompt(self, texts: List[str], is_positive: bool) -> str:
+    def create_prompt(self, texts: List[str]) -> str:
         """Create prompt with few-shot examples"""
         prompt = ("You are modelling an expert at summarizing feedback for separate student guides (teachers/educators). " +
-                  "We want you to provide insightful but tactful feedback in two forms: positive and constructive." +
-                  "You will summarize feedback into concise statements, separated by guide and type (positive/constructive), based on provided texts, " +
-                  "which will be separate (but possibly overlapping) for positive and constructive feedback statements and for each student guide.")
+                  "We want you to provide insightful but tactful and CONCISE feedback." +
+                  "You will summarize feedback into concise statements based on provided texts.")
 
-        # Add expert examples
-        if is_positive:
-            texts_col = "positive_texts"
-            
-        else:
-            texts_col = "constructive_texts"
         for i, example in enumerate(self.expert_examples, start=1):
             prompt += f"Example {i}:\n"
             prompt += "Texts to summarize:\n"
-            for j, text in enumerate(example[texts_col], 1):
+            for j, text in enumerate(example["texts"], 1):
                 prompt += f"- {text}\n"
             prompt += f"\nExpert Summary: {example['summary']}\n\n"
 
