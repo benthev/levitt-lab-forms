@@ -1,4 +1,5 @@
 import pandas as pd
+from openpyxl.styles import Alignment
 from openpyxl.utils import get_column_letter
 
 
@@ -16,6 +17,12 @@ def save_excel_with_autofit(df, filepath, index=False):
             max_idx_len = max(df.index.astype(str).map(
                 len).max(), len(str(df.index.name) or '')) + 2
             worksheet.column_dimensions['A'].width = max_idx_len
+
+        # Left-justify header cells
+        header_row = 1
+        for col_idx in range(1, len(df.columns) + 1 + col_offset):
+            cell = worksheet.cell(row=header_row, column=col_idx)
+            cell.alignment = Alignment(horizontal='left')
 
         for idx, col in enumerate(df.columns):
             # Get max length of column content

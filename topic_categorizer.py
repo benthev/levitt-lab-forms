@@ -37,7 +37,8 @@ class TopicCategorizer:
             return
         try:
             # Convert tuples to lists for JSON serialization
-            cache_data = {k: list(v) if v else None for k, v in self.topic_cache.items()}
+            cache_data = {k: list(v) if v else None for k,
+                          v in self.topic_cache.items()}
             with open(self.cache_file, 'w') as f:
                 json.dump(cache_data, f, indent=2)
         except Exception as e:
@@ -102,10 +103,11 @@ class TopicCategorizer:
                     # Simple confidence based on temperature and successful match
                     confidence = "high" if len(
                         reference_topics) <= 10 else "medium"
-                    matched_result = (reference_topics[match_index - 1], confidence)
+                    matched_result = (
+                        reference_topics[match_index - 1], confidence)
                 else:
                     matched_result = (None, "invalid_response")
-                
+
                 # Cache the result if caching is enabled
                 if self.use_cache:
                     cache_key = self._get_cache_key(topic, reference_topics)
@@ -214,5 +216,5 @@ class TopicCategorizer:
         df = df[df["week_start"] <= pd.Timestamp.today()]
         topics = df[column].dropna().tolist()
         topics = [topic for topic in topics if not any(
-            substring in topic.upper() for substring in ["NO WONDER SESSION", "NO SEMINAR"])]
+            substring in topic.upper() for substring in ["NO WONDER SESSION", "NO SEMINAR", "NO WS", "NO SEM"])]
         return topics

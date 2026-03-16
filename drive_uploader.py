@@ -72,6 +72,7 @@ def upload_files_to_drive(folder_id=None, local_folder='output'):
     files_to_upload = [f for f in os.listdir(local_folder)
                        if os.path.isfile(os.path.join(local_folder, f))
                        and not f.startswith('.')
+                       and not f.startswith('~$')
                        and f.endswith('.xlsx')]
 
     if not files_to_upload:

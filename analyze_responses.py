@@ -46,9 +46,10 @@ def qual_summary(df, agg_cols):
 
     summarizer = SimpleTextSummarizer()
     agg_df = df.groupby(agg_cols, dropna=False).apply(
-        lambda group: summarizer.summarize_texts(text_list) if (text_list := group[cols_qual_avail].stack().dropna().tolist()) else ''
-    ).reset_index(name='qual_summary')
-
+        lambda group: summarizer.summarize_texts(text_list) if (
+            text_list := group[cols_qual_avail].stack().dropna().tolist()) else ''
+    ).reset_index(name='qual_summary_by_llm')
+    print(agg_df)
     return agg_df
 
 
