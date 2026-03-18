@@ -45,8 +45,12 @@ def qual_summary(df, agg_cols):
     cols_qual_avail = [col for col in cols_qual if col in df.columns]
 
     summarizer = SimpleTextSummarizer()
+    if agg_cols == 'Guide':
+        prompt_append = "You are summarizing feedback for this Guide across multiple Seminars or Wonder Sessions, so do not reference a single 'seminar' or 'session' but instead talk about multiple 'sessions' or 'feedback' in general."
+    else:
+        prompt_append = ""
     agg_df = df.groupby(agg_cols, dropna=False).apply(
-        lambda group: summarizer.summarize_texts(text_list) if (
+        lambda group: summarizer.summarize_texts(text_list, prompt_append) if (
             text_list := group[cols_qual_avail].stack().dropna().tolist()) else ''
     ).reset_index(name='qual_summary_by_llm')
     print(agg_df)

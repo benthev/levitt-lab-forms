@@ -28,9 +28,9 @@ class SimpleTextSummarizer:
 
     def create_prompt(self, texts: List[str]) -> str:
         """Create prompt with few-shot examples"""
-        prompt = ("You are modelling an expert at summarizing feedback for separate student guides (teachers/educators). " +
-                  "We want you to provide insightful but tactful and CONCISE feedback." +
-                  "You will summarize feedback into concise statements based on provided texts.")
+        prompt = ("You are modelling an expert at summarizing feedback on sessions (Wonder Sessions or Seminars) given by Guides (teachers or educators). " +
+                  "We want you to provide insightful but tactful and CONCISE feedback. Drop superfluous words." +
+                  "You will summarize feedback into concise statements based on provided feedback texts given by students. Quote representative feedback where necessary.")
 
         for i, example in enumerate(self.expert_examples, start=1):
             prompt += f"Example {i}:\n"
@@ -47,9 +47,12 @@ class SimpleTextSummarizer:
         prompt += "\nProvide a concise summary:"
         return prompt
 
-    def summarize_texts(self, texts: List[str]) -> str:
+    def summarize_texts(self, texts: List[str], prompt_append: str = "") -> str:
         """Summarize a list of texts"""
         prompt = self.create_prompt(texts)
+
+        if prompt_append:
+            prompt += f"\n{prompt_append}"
 
         try:
             response = self.client.chat.completions.create(
