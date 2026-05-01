@@ -213,7 +213,7 @@ class TopicCategorizer:
         df = pd.read_csv(filepath)
         df["week_start"] = pd.to_datetime(
             df["Week Start"], format="%Y/%m/%d", errors='coerce')
-        df = df[df["week_start"] <= pd.Timestamp.today()]
+        df = df[df["week_start"] <= pd.Timestamp.today() + pd.Timedelta(days=7)]
         topics = df[column].dropna().tolist()
         topics = [topic for topic in topics if not any(
             substring in topic.upper() for substring in ["NO WONDER SESSION", "NO SEMINAR", "NO WS", "NO SEM"])]
