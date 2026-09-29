@@ -1,4 +1,5 @@
 import pandas as pd
+import pygsheets
 from openai import OpenAI
 import json
 from typing import List, Dict, Optional, Tuple
@@ -6,6 +7,20 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv()
+
+# Master topic list sources, keyed by session type
+REFERENCE_TOPIC_SOURCES = {
+    "Seminar": {
+        "sheet_id": "1xUoYG16M_PLbqijwPRgalAR85CIsCAb9pU4IIEwWnf8",
+        "worksheet": "Master Seminar List",
+        "column": "Topic",
+    },
+    "Wonder Session": {
+        "sheet_id": "1SYIcT8PLft359-UjN_rLQLrkH9XfCOfvPbVnnzguKxg",
+        "worksheet": "Wonder Sessions",
+        "column": "Title",
+    },
+}
 
 
 class TopicCategorizer:
@@ -209,12 +224,21 @@ class TopicCategorizer:
             'mapping_details': mapping_counts.to_dict('records') if not mapping_counts.empty else []
         }
 
-    def get_reference_topics(self, column, filepath="https://docs.google.com/spreadsheets/d/1i5OZu7UVwcwQpYk7R8gSwvlW3FigO906etXPYG4t_Ec/export?format=csv&gid=0"):
-        df = pd.read_csv(filepath)
-        df["week_start"] = pd.to_datetime(
-            df["Week Start"], format="%Y/%m/%d", errors='coerce')
-        df = df[df["week_start"] <= pd.Timestamp.today() + pd.Timedelta(days=7)]
-        topics = df[column].dropna().tolist()
-        topics = [topic for topic in topics if not any(
-            substring in topic.upper() for substring in ["NO WONDER SESSION", "NO SEMINAR", "NO WS", "NO SEM"])]
+    def get_reference_topics(self, session_type):
+        """Fetch the master topic list for a session type (Seminar or Wonder Session)."""
+        source = REFERENCE_TOPIC_SOURCES.get(session_type)
+        if source is None:
+            raise ValueError(
+                f"No reference topic source configured for '{session_type}'")
+
+        gc = pygsheets.authorize(
+            service_file=os.getenv("SERVICE_ACCOUNT_FILE"))
+        sheet = gc.open_by_key(source["sheet_id"])
+        wks = sheet.worksheet_by_title(source["worksheet"])
+        df = wks.get_as_df()
+
+        topics = df[source["column"]].astype(str).str.strip()
+        topics = topics[topics != '']
+        # De-duplicate while preserving order
+        topics = list(dict.fromkeys(topics.tolist()))
         return topics

@@ -15,117 +15,93 @@ from drive_uploader import upload_files_to_drive
 from excel_utils import save_excel_with_autofit
 
 
+FORMS = [
+    {"school": "Tempe", "session_type": "Seminar",
+     "sheet_title": "Seminar Feedback (Tempe) (Responses)"},
+    {"school": "Tempe", "session_type": "Wonder Session",
+     "sheet_title": "Wonder Session Feedback (Tempe) (Responses)"},
+    {"school": "Da Vinci", "session_type": "Seminar",
+     "sheet_title": "DV: Seminar (OX) Feedback (Responses)"},
+    {"school": "Da Vinci", "session_type": "Wonder Session",
+     "sheet_title": "Wonder Session Feedback (Da Vinci) (Responses)"},
+]
+
+
+def process_form(school, session_type, sheet_title, categorizer):
+    """Fetch, clean, categorize, analyze and save one school/session-type form."""
+    school_slug = school.lower().replace(" ", "")
+    type_slug = "seminar" if session_type == "Seminar" else "wonder"
+    prefix = f"{school_slug}_{type_slug}"
+
+    print(f"\n📥 Fetching responses for {school} {session_type}...")
+    df = get_responses(sheet_title)
+    if df.empty:
+        print(f"   ⚠️  No responses found for '{sheet_title}' - skipping.")
+        return None
+
+    print(f"\n🧼 Cleaning responses...")
+    df = clean_responses(df)
+
+    print(f"\n🎯 Categorizing topics...")
+    reference_topics = categorizer.get_reference_topics(session_type)
+    df = categorizer.categorize_dataframe_topics(df, reference_topics)
+    categorizer.get_categorization_summary(df)
+
+    print(f"\n📊 Analysing responses...")
+    guide_stats = guide_level_summary(df)
+    topic_stats = topic_level_summary(df)
+    topic_guide_stats = topic_guide_level_summary(df)
+    corr = correlation_analysis(df)
+
+    print(f"\n--- {school} {session_type} Guide Stats ---")
+    print(guide_stats)
+    print(f"\n--- {school} {session_type} Topic Stats ---")
+    print(topic_stats)
+    print(f"\n--- {school} {session_type} Correlation Matrix ---")
+    print(corr)
+
+    save_excel_with_autofit(topic_stats, f'output/{prefix}_topic_stats.xlsx')
+    save_excel_with_autofit(guide_stats, f'output/{prefix}_guide_stats.xlsx')
+    save_excel_with_autofit(
+        topic_guide_stats, f'output/{prefix}_topic_guide_stats.xlsx')
+    save_excel_with_autofit(
+        corr, f'output/{prefix}_correlation_matrix.xlsx', index=True)
+
+    comparison = df[['topic', 'matched_topic']].copy()
+    comparison.columns = ['Original Topic', 'Matched Topic']
+    comparison = comparison.sort_values('Original Topic')
+    save_excel_with_autofit(
+        comparison, f'output/topic comparisons/{prefix}_topic_comparison.xlsx')
+
+    comparison['School'] = school
+    comparison['Session Type'] = session_type
+    return comparison
+
+
 def main():
     print("🚀 Feedback Forms Response Fetcher")
     print("-" * 40)
 
-    # Fetch responses
-    print(f"\n📥 Fetching responses...")
-    seminar_df = get_responses(
-        "Seminar Feedback (Responses)")
-
-    wonder_df = get_responses(
-        "Wonder Session Feedback (Responses)")
-
-    # Clean responses
-    print("\n🧼 Cleaning responses...")
-    seminar_df = clean_responses(seminar_df)
-    wonder_df = clean_responses(wonder_df)
-
-    # Categorize response topics
-    print("\\n🎯 Categorizing topics...")
     categorizer = TopicCategorizer()
-    seminar_topics = categorizer.get_reference_topics("Seminar")
-    wonder_topics = categorizer.get_reference_topics("Wonder Session")
-    print("   📚 Processing seminar topics...")
-    seminar_df = categorizer.categorize_dataframe_topics(
-        seminar_df, seminar_topics
-    )
 
-    print("   🔬 Processing wonder session topics...")
-    wonder_df = categorizer.categorize_dataframe_topics(
-        wonder_df, wonder_topics
-    )
-    seminar_summary = categorizer.get_categorization_summary(
-        seminar_df)
-    wonder_summary = categorizer.get_categorization_summary(
-        wonder_df)
+    comparisons_by_school = {}
+    for form in FORMS:
+        comparison = process_form(
+            form["school"], form["session_type"], form["sheet_title"], categorizer)
+        if comparison is not None:
+            comparisons_by_school.setdefault(
+                form["school"], []).append(comparison)
 
-    # Analyse responses
-    print("\n📊 Analysing responses...")
-
-    seminar_guide_stats = guide_level_summary(seminar_df)
-    wonder_guide_stats = guide_level_summary(wonder_df)
-
-    print("\n--- Seminar Guide Stats ---")
-    print(seminar_guide_stats)
-    print("\n--- Wonder Session Guide Stats ---")
-    print(wonder_guide_stats)
-
-    seminar_topic_stats = topic_level_summary(seminar_df)
-    wonder_topic_stats = topic_level_summary(wonder_df)
-
-    print("\n--- Seminar Topic Stats ---")
-    print(seminar_topic_stats)
-    print("\n--- Wonder Session Topic Stats ---")
-    print(wonder_topic_stats)
-
-    seminar_topic_guide_stats = topic_guide_level_summary(seminar_df)
-    wonder_topic_guide_stats = topic_guide_level_summary(wonder_df)
-
-    # Save to Excel
-    save_excel_with_autofit(seminar_topic_stats,
-                            'output/seminar_topic_stats.xlsx')
-    save_excel_with_autofit(
-        wonder_topic_stats, 'output/wonder_topic_stats.xlsx')
-    save_excel_with_autofit(seminar_guide_stats,
-                            'output/seminar_guide_stats.xlsx')
-    save_excel_with_autofit(
-        wonder_guide_stats, 'output/wonder_guide_stats.xlsx')
-    save_excel_with_autofit(seminar_topic_guide_stats,
-                            'output/seminar_topic_guide_stats.xlsx')
-    save_excel_with_autofit(
-        wonder_topic_guide_stats, 'output/wonder_topic_guide_stats.xlsx')
-    # print(f"   💾 Saved to: {filename}")
-
-    # Correlation metrics
-    seminar_corr = correlation_analysis(seminar_df)
-    wonder_corr = correlation_analysis(wonder_df)
-
-    print("\n--- Seminar Correlation Matrix ---")
-    print(seminar_corr)
-    print("\n--- Wonder Session Correlation Matrix ---")
-    print(wonder_corr)
-
-    save_excel_with_autofit(
-        seminar_corr, 'output/seminar_correlation_matrix.xlsx', index=True)
-    save_excel_with_autofit(
-        wonder_corr, 'output/wonder_correlation_matrix.xlsx', index=True)
-
-    # Generate topic comparison CSVs
-    print("\n📋 Generating topic comparison CSVs...")
-    seminar_comparison = seminar_df[['topic', 'matched_topic']].copy()
-    seminar_comparison.columns = ['Original Topic', 'Matched Topic']
-    seminar_comparison = seminar_comparison.sort_values('Original Topic')
-    save_excel_with_autofit(
-        seminar_comparison, 'output/topic comparisons/seminar_topic_comparison.xlsx')
-
-    wonder_comparison = wonder_df[['topic', 'matched_topic']].copy()
-    wonder_comparison.columns = ['Original Topic', 'Matched Topic']
-    wonder_comparison = wonder_comparison.sort_values('Original Topic')
-    save_excel_with_autofit(
-        wonder_comparison, 'output/topic comparisons/wonder_topic_comparison.xlsx')
-
-    # Combined comparison
-    seminar_comparison['Session Type'] = 'Seminar'
-    wonder_comparison['Session Type'] = 'Wonder Session'
-    combined_comparison = pd.concat(
-        [seminar_comparison, wonder_comparison], ignore_index=True)
-    combined_comparison = combined_comparison.sort_values(
-        ['Session Type', 'Original Topic'])
-    save_excel_with_autofit(
-        combined_comparison, 'output/topic comparisons/combined_topic_comparison.xlsx')
-    print(f"   💾 Saved topic comparison files")
+    # Combined per-school topic comparison (Seminar + Wonder Session)
+    print("\n📋 Generating combined topic comparison files...")
+    for school, comparisons in comparisons_by_school.items():
+        school_slug = school.lower().replace(" ", "")
+        combined = pd.concat(comparisons, ignore_index=True)
+        combined = combined.sort_values(['Session Type', 'Original Topic'])
+        save_excel_with_autofit(
+            combined,
+            f'output/topic comparisons/{school_slug}_combined_topic_comparison.xlsx')
+    print("   💾 Saved topic comparison files")
 
     # Summarize qual feedback
     # Prepare few shot examples

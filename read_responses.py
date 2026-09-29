@@ -24,6 +24,7 @@ def get_responses(title, worksheet="Form Responses 1"):
 
 def identify_topics(df):
     topic_cols = ["What was your Seminar topic?",
+                  "What was your OX topic?",
                   "What was your Wonder Session topic / title?"]
     for topic_col in topic_cols:
         if topic_col in df.columns:
@@ -35,6 +36,9 @@ def identify_topics(df):
 def clean_responses(df):
     # Convert Timestamp to datetime
     df['Timestamp'] = pd.to_datetime(df['Timestamp'], errors='coerce')
+    # Drop rows with no Timestamp - these aren't real form submissions
+    # (e.g. stray formula/summary rows left in the response sheet)
+    df = df.dropna(subset=['Timestamp']).copy()
     df['year-week'] = df['Timestamp'].dt.strftime('%Y-%W')
     df['week_start'] = pd.to_datetime(
         df['year-week'] + '-1', format='%Y-%W-%w')
@@ -60,9 +64,12 @@ def clean_responses(df):
     # Convert quant questions to numeric if not already
     cols_quant = ['I felt comfortable as a student in this Seminar.',
                   'I felt like my voice mattered in this Seminar.',
+                  'I felt like my voice mattered in this OX.',
                   'I felt like I could connect with the Guide as a person.',
                   'The content of the Seminar was interesting to me.',
+                  'The content of the OX was interesting to me.',
                   'I learned a lot from the Seminar.',
+                  'I learned a lot from the OX.',
                   'How much did it "wow" you?', 'How much fun did you have?',
                   'Did it leave you wanting to learn more about this topic?']
     cols_quant = [col for col in cols_quant if col in df.columns]
@@ -72,7 +79,9 @@ def clean_responses(df):
 
     # Attribute Guides
     cols_guide = ["What was the name of the Guide who delivered your Seminar?",
-                  "What was the name of the Guide who delivered your Wonder Session?"]
+                  "What was the name of the Guide who delivered your OX?",
+                  "What was the name of the Guide who delivered your Wonder Session?",
+                  "What was the name of the person who delivered your Wonder Session?"]
     cols_guide = [col for col in cols_guide if col in df.columns]
     df['Guide'] = df[cols_guide[0]]
     print(df.columns)

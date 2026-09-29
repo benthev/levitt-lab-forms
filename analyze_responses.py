@@ -2,8 +2,11 @@ import pandas as pd
 from summarizer import SimpleTextSummarizer
 
 cols_quant = ['I felt like my voice mattered in this Seminar.',
+              'I felt like my voice mattered in this OX.',
               'The content of the Seminar was interesting to me.',
-              'I learned a lot from the Seminar.', 'How much fun did you have?',
+              'The content of the OX was interesting to me.',
+              'I learned a lot from the Seminar.', 'I learned a lot from the OX.',
+              'How much fun did you have?',
               'Did it leave you wanting to learn more about this topic?']
 
 cols_qual = ['Let us know if you have more thoughts or feedback!']
